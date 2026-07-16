@@ -37,10 +37,6 @@ if not st.session_state.authenticated:
     # 密码错误时下面的代码不会执行，直接停止
     st.stop()
 
-# ========== 正常内容（密码正确后才会显示） ==========
-st.title("📊 成绩分析小助手")
-
-# ... 你原来的所有代码从这里开始 ...
 
 # ========== 页面设置 ==========
 st.set_page_config(page_title="成绩分析小助手", page_icon="📊")
