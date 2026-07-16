@@ -27,37 +27,62 @@ if st.session_state.step == "input":
         submitted = st.form_submit_button("下一步")
         if submitted:
             st.session_state.count = count
+            st.session_state.subjects = [""] * count
+            st.session_state.scores = [0.0] * count
+            st.session_state.full_marks = [100.0] * count
             st.session_state.step = "input_scores"
             st.rerun()
 
 # ========== 第二步：输入科目名和成绩 ==========
 elif st.session_state.step == "input_scores":
     st.write(f"请录入 **{st.session_state.count}** 科的成绩：")
+    
     with st.form("score_form"):
-        subjects_temp = []
-        scores_temp = []
-        full_marks_temp = []
+        cols = st.columns(3)
+        with cols[0]:
+            st.write("**科目名称**")
+        with cols[1]:
+            st.write("**成绩**")
+        with cols[2]:
+            st.write("**满分**")
+        
         for i in range(st.session_state.count):
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                name = st.text_input(f"第{i+1}科名称", key=f"name_{i}")
-            with col2:
-                score = st.number_input(f"{name or '科目'}成绩", min_value=0, max_value=150, key=f"score_{i}")
-            with col3:
-                full = st.number_input(f"{name or '科目'}满分", min_value=1, max_value=150, key=f"full_{i}")
-            if name:
-                subjects_temp.append(name)
-                scores_temp.append(score)
-                full_marks_temp.append(full)
+            cols = st.columns(3)
+            with cols[0]:
+                name = st.text_input(
+                    f"科目{i+1}", 
+                    value=st.session_state.subjects[i],
+                    key=f"subject_input_{i}"
+                )
+                st.session_state.subjects[i] = name
+            with cols[1]:
+                score = st.number_input(
+                    f"成绩{i+1}", 
+                    min_value=0.0, 
+                    max_value=150.0, 
+                    step=0.5,
+                    value=st.session_state.scores[i],
+                    key=f"score_input_{i}"
+                )
+                st.session_state.scores[i] = score
+            with cols[2]:
+                full = st.number_input(
+                    f"满分{i+1}", 
+                    min_value=0.5, 
+                    max_value=150.0, 
+                    step=0.5,
+                    value=st.session_state.full_marks[i],
+                    key=f"full_input_{i}"
+                )
+                st.session_state.full_marks[i] = full
+        
         submitted = st.form_submit_button("确认录入")
-        if submitted and len(subjects_temp) == st.session_state.count:
-            st.session_state.subjects = subjects_temp
-            st.session_state.scores = scores_temp
-            st.session_state.full_marks = full_marks_temp
-            st.session_state.step = "confirm"
-            st.rerun()
-        elif submitted:
-            st.warning("请完整填写所有科目名称！")
+        if submitted:
+            if "" in st.session_state.subjects:
+                st.warning("请完整填写所有科目名称！")
+            else:
+                st.session_state.step = "confirm"
+                st.rerun()
 
 # ========== 第三步：确认数据 ==========
 elif st.session_state.step == "confirm":
@@ -70,6 +95,7 @@ elif st.session_state.step == "confirm":
             "满分": st.session_state.full_marks[i]
         })
     st.table(data)
+    
     col1, col2 = st.columns(2)
     with col1:
         if st.button("✅ 正确，开始分析", use_container_width=True):
@@ -77,6 +103,10 @@ elif st.session_state.step == "confirm":
             st.rerun()
     with col2:
         if st.button("🔄 重新录入", use_container_width=True):
+            st.session_state.subjects = []
+            st.session_state.scores = []
+            st.session_state.full_marks = []
+            st.session_state.messages = []
             st.session_state.step = "input"
             st.rerun()
 
@@ -127,9 +157,9 @@ elif st.session_state.step == "analyzing":
             st.session_state.step = "confirm"
             st.rerun()
 
-# ========== 第五步：对话模式（稳定版，用 chat_input） ==========
+# ========== 第五步：对话模式 ==========
 elif st.session_state.step == "chatting":
-    # 显示所有历史对话
+    # 显示历史对话
     for msg in st.session_state.messages:
         if msg["role"] == "user":
             with st.chat_message("user"):
@@ -138,7 +168,7 @@ elif st.session_state.step == "chatting":
             with st.chat_message("assistant"):
                 st.write(msg["content"])
 
-    # 底部输入框（不套 form，直接用 chat_input，避免和 form 冲突）
+    # 底部输入框
     user_question = st.chat_input("💬 输入你的问题（比如：英语怎么提分？）")
 
     if user_question:
@@ -169,7 +199,7 @@ elif st.session_state.step == "chatting":
                 except Exception as e:
                     st.error(f"❌ 出错了：{e}")
 
-    # 侧边栏显示成绩数据
+    # 侧边栏
     with st.sidebar:
         st.subheader("📊 当前成绩")
         data = []
