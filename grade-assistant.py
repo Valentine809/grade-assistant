@@ -1,10 +1,46 @@
-# ========== 导入库 ==========
+#========== 导入库 ==========
 import streamlit as st
 import requests
 import json
 
 # 🔴 在这里填你的API Key
 API_KEY = "sk-cb5220420a0b4892bfbaa09452dbfaf4"
+
+# 🔐 访问密码（改成你自己的，比如 "8888" 或 "mima123"）
+ACCESS_PASSWORD = "88888888"
+
+# ========== 页面设置 ==========
+st.set_page_config(page_title="成绩分析小助手", page_icon="📊")
+
+# ========== 密码验证 ==========
+# 如果 session_state 里没有 "authenticated"，说明还没登录
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+# 如果还没验证通过，显示密码输入框
+if not st.session_state.authenticated:
+    st.title("🔐 访问验证")
+    st.write("请输入访问密码以继续使用成绩分析小助手")
+    
+    with st.form("password_form"):
+        password_input = st.text_input("密码", type="password")
+        submitted = st.form_submit_button("验证")
+        
+        if submitted:
+            if password_input == ACCESS_PASSWORD:
+                st.session_state.authenticated = True
+                st.success("✅ 密码正确，正在进入...")
+                st.rerun()
+            else:
+                st.error("❌ 密码错误，请重新输入")
+    
+    # 密码错误时下面的代码不会执行，直接停止
+    st.stop()
+
+# ========== 正常内容（密码正确后才会显示） ==========
+st.title("📊 成绩分析小助手")
+
+# ... 你原来的所有代码从这里开始 ...
 
 # ========== 页面设置 ==========
 st.set_page_config(page_title="成绩分析小助手", page_icon="📊")
